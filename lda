@@ -1,0 +1,30 @@
+from nltk.tokenize import RegexpTokenizer
+from stop_words import get_stop_words
+from nltk.stem.porter import PorterStemmer
+from gensim import corpora, models
+import gensim 
+tokenizer = RegexpTokenizer(r'\w+')
+en_stop = get_stop_words('en') 
+p_stemmer = PorterStemmer()  
+doc_a = "主诉： 头晕2周余
+.现病史： 患者约2周前开始出现头晕，伴后枕部搏动性疼痛，无恶心呕吐，于当地诊所输液治疗，无明显好转。今日于射阳县海河中心卫生院，头颅CT示：双侧基底节区、侧脑室旁、卵圆区腔隙性脑梗塞；右侧侧脑室旁高密度影，出血不排除。现为求进一步治疗，就诊 "
+doc_b = "主诉： 胸闷2小时
+.现病史： 患者于2小时前进食芋头后出现胸闷，自觉心率下降，感头晕、恶心、未呕吐，无胸痛，无腹痛，现症状无明显缓解，遂来我院就诊，考虑患者病情危重，予以抢救室留观。过去史： 既往尿毒症维持透析（周一、三、五）、有高血压病、SLE病史，否认其他"
+doc_c = "主诉： 发热恶心呕吐2天.现病史： 患者2天出现发热，恶心呕吐，有轻微咽痛，无咳嗽，无咳痰，无腹痛，无腹泻，无胸痛，无心慌，无胸闷，无后背放射痛，小便量少，大便未解，自测体温38.9摄氏度，就诊当地医院输注头孢治疗症状稍有缓解，在急诊就诊输液后症状有所缓解，今"
+doc_d = "主诉： 反复头晕1天，再发1小时
+.现病史： 患者于2019-1-6 08:00左右无明显诱因出现头晕，伴耳鸣，无头痛、视物不清、视物旋转、肢体无力、跌倒等不适，约1小时后自行好转，未就诊。20:00左右患者再次出现类似症状，遂急诊就诊.过去史： 2018年9月曾因“右侧小脑半球脑梗"
+doc_e = "主诉： 反复恶心呕吐1月余，呕血6天，纳差4天
+.现病史： 患者1月余前无明显诱因下反复出现恶心呕吐症状，无头痛头晕，无胸闷心慌，无腹胀腹痛，无腹泻等不适，6天前患者突然出现呕血，为鲜血，量不详，无腹胀腹痛，无黑便，至宜兴市人民医院就诊，完善胃镜提示“食管黏膜剥脱"
+doc_set = [doc_a, doc_b, doc_c, doc_d, doc_e]
+texts = [] 
+for i in doc_set:
+    raw = i.lower()
+    tokens = tokenizer.tokenize(raw)
+    stopped_tokens = [i for i in tokens if not i in en_stop]
+    stemmed_tokens = [p_stemmer.stem(i) for i in stopped_tokens]
+    texts.append(stemmed_tokens)
+dictionary = corpora.Dictionary(texts)   
+corpus = [dictionary.doc2bow(text) for text in texts]
+ldamodel3 = gensim.models.ldamodel.LdaModel(corpus, num_topics=2, id2word = dictionary, passes=20)
+print(ldamodel3.print_topics(num_topics=3, num_words=3))
+print(ldamodel3.print_topics(num_topics=2, num_words=4))
